@@ -4,11 +4,11 @@ pragma solidity 0.8.0;
 import "./Ownable.sol";
 
 contract GasContract is Ownable {
-    uint256 public totalSupply = 0; // cannot be updated
-    uint256 public paymentCounter = 0;
+    uint256 public totalSupply; // cannot be updated
+    uint256 private paymentCounter;
     mapping(address => uint256) public balances;
     uint256 public tradePercent = 12;
-    uint256 public tradeMode = 0;
+    uint256 public tradeMode;
     mapping(address => Payment[]) public payments;
     mapping(address => uint256) public whitelist;
     address[5] public administrators;
