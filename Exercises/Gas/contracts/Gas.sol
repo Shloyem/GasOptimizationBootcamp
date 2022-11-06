@@ -8,7 +8,6 @@ contract GasContract is Ownable {
     uint256 public paymentCounter = 0;
     mapping(address => uint256) public balances;
     uint256 public tradePercent = 12;
-    address public contractOwner;
     uint256 public tradeMode = 0;
     mapping(address => Payment[]) public payments;
     mapping(address => uint256) public whitelist;
@@ -60,7 +59,7 @@ contract GasContract is Ownable {
                 "Gas Contract Only Admin Check-  Caller not admin"
             );
             _;
-        } else if (senderOfTx == contractOwner) {
+        } else if (senderOfTx == owner()) {
             _;
         } else {
             revert(
@@ -98,20 +97,19 @@ contract GasContract is Ownable {
     event WhiteListTransfer(address indexed);
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
-        contractOwner = msg.sender;
         totalSupply = _totalSupply;
 
         for (uint256 ii = 0; ii < administrators.length; ii++) {
             if (_admins[ii] != address(0)) {
                 administrators[ii] = _admins[ii];
-                if (_admins[ii] == contractOwner) {
-                    balances[contractOwner] = totalSupply;
+                if (_admins[ii] == owner()) {
+                    balances[owner()] = _totalSupply;
                 } else {
                     balances[_admins[ii]] = 0;
                 }
-                if (_admins[ii] == contractOwner) {
-                    emit supplyChanged(_admins[ii], totalSupply);
-                } else if (_admins[ii] != contractOwner) {
+                if (_admins[ii] == owner()) {
+                    emit supplyChanged(_admins[ii], _totalSupply);
+                } else if (_admins[ii] != owner()) {
                     emit supplyChanged(_admins[ii], 0);
                 }
             }
