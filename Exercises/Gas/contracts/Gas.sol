@@ -22,7 +22,6 @@ contract GasContract is Ownable {
     struct Payment {
         PaymentType paymentType;
         uint256 paymentID;
-        bool adminUpdated;
         string recipientName; // max 8 characters
         address recipient;
         address admin; // administrators address
@@ -35,7 +34,7 @@ contract GasContract is Ownable {
         uint8 valueB; // max 3 digits
     }
 
-    modifier onlyAdminOrOwner() {
+    /*modifier onlyAdminOrOwner() {
         if ((msg.sender == owner()) || checkForAdmin(msg.sender)) {
             // todo look for better owner check
             _;
@@ -43,7 +42,7 @@ contract GasContract is Ownable {
             revert();
             // "Gas:onlyAdminOrOwner"
         }
-    }
+    }*/
 
     modifier checkIfWhiteListed(address sender) {
         require(
@@ -75,14 +74,14 @@ contract GasContract is Ownable {
         }
     }
 
-    function checkForAdmin(address _user) public view returns (bool) {
+    /*function checkForAdmin(address _user) public view returns (bool) {
         for (uint256 ii = 0; ii < 5; ii++) {
             if (administrators[ii] == _user) {
                 return true;
             }
         }
         return false;
-    }
+    }*/
 
     function balanceOf(address _user) public view returns (uint256) {
         return balances[_user];
@@ -93,9 +92,9 @@ contract GasContract is Ownable {
     }
 
     function getPayments(address _user) public view returns (Payment[] memory) {
-        require(
-            _user != address(0) //, "Gas:Invalid zero address"
-        );
+        // require(
+        //     _user != address(0) //, "Gas:Invalid zero address"
+        // );
         return payments[_user];
     }
 
@@ -116,7 +115,6 @@ contract GasContract is Ownable {
         emit Transfer(_recipient, _amount);
         Payment memory payment;
         payment.admin;
-        payment.adminUpdated;
         payment.paymentType;
         payment.recipient = _recipient;
         payment.amount = _amount;
@@ -130,7 +128,8 @@ contract GasContract is Ownable {
         uint256 _ID,
         uint256 _amount,
         PaymentType _type
-    ) public onlyAdminOrOwner {
+    ) public onlyOwner //onlyAdminOrOwner
+    {
         require(
             _ID > 0 && _amount > 0 && _user != address(0) //,"Gas:Invalid input"
         );
@@ -146,8 +145,7 @@ contract GasContract is Ownable {
 
         for (uint256 ii = 0; ii < payments[_user].length; ii++) {
             if (payments[_user][ii].paymentID == _ID) {
-                payments[_user][ii].adminUpdated = true;
-                payments[_user][ii].admin = _user;
+                //payments[_user][ii].admin = _user;
                 payments[_user][ii].paymentType = _type;
                 payments[_user][ii].amount = _amount;
             }
@@ -156,20 +154,17 @@ contract GasContract is Ownable {
 
     function addToWhitelist(address _userAddrs, uint256 _tier)
         public
-        onlyAdminOrOwner
+    /*onlyAdminOrOwner*/
     {
-        require(
+        /*require(
             _tier < 255 //, "Gas.addToWhitelist-tier lvl over 255"
-        );
-        whitelist[_userAddrs] = _tier;
-        if (_tier > 3) {
-            whitelist[_userAddrs] -= _tier;
+        );*/
+        // whitelist[_userAddrs] = _tier;
+        if (_tier >= 3) {
             whitelist[_userAddrs] = 3;
         } else if (_tier == 1) {
-            whitelist[_userAddrs] -= _tier;
             whitelist[_userAddrs] = 1;
-        } else if (_tier > 0 && _tier < 3) {
-            whitelist[_userAddrs] -= _tier;
+        } else if (_tier == 2) {
             whitelist[_userAddrs] = 2;
         }
     }
@@ -179,13 +174,15 @@ contract GasContract is Ownable {
         uint256 _amount,
         ImportantStruct memory _struct
     ) public checkIfWhiteListed(msg.sender) {
-        require(balances[msg.sender] >= _amount && _amount > 3);
+        /* require(balances[msg.sender] >= _amount && _amount > 3); */
+
         // require(
         //     balances[msg.sender] >= _amount //, "Gas.whiteTransfers:Insufficient Sender Balance"
         // );
         // require(
         //     _amount > 3 //, "Gas.whiteTransfers:Amount not greater than 3"
         // );
+
         balances[msg.sender] -= _amount;
         balances[_recipient] += _amount;
         balances[msg.sender] += whitelist[msg.sender];
