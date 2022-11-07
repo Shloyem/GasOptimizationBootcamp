@@ -40,18 +40,23 @@ contract GasContract is Ownable {
             // todo look for better owner check
             _;
         } else {
-            revert("Gas:onlyAdminOrOwner");
+            revert();
+            // "Gas:onlyAdminOrOwner"
         }
     }
 
     modifier checkIfWhiteListed(address sender) {
         require(
-            msg.sender == sender,
-            "Gas Contract CheckIfWhiteListed modifier : revert happened because the originator of the transaction was not the sender"
+            msg.sender == sender //, "Gas.CheckIfWhiteListed: transaction originator is not sender"
         );
         uint256 usersTier = whitelist[msg.sender];
-        require(usersTier > 0, "Gas:user is not whitelisted");
-        require(usersTier < 4, "Gas:incorrect tier is incorrect");
+        require(usersTier > 0 && usersTier < 4);
+        /*require(
+            usersTier > 0 //, "Gas:user is not whitelisted"
+        );
+        require(
+            usersTier < 4 //, "Gas:incorrect tier is incorrect"
+        );*/
         _;
     }
 
@@ -88,7 +93,9 @@ contract GasContract is Ownable {
     }
 
     function getPayments(address _user) public view returns (Payment[] memory) {
-        require(_user != address(0), "Gas:Invalid zero address");
+        require(
+            _user != address(0) //, "Gas:Invalid zero address"
+        );
         return payments[_user];
     }
 
@@ -97,11 +104,13 @@ contract GasContract is Ownable {
         uint256 _amount,
         string calldata _name
     ) public {
-        require(
-            balances[msg.sender] >= _amount,
-            "Gas:insufficient sender Balance"
-        );
-        require(bytes(_name).length < 9, "Gas:recipient name too long");
+        require(balances[msg.sender] >= _amount && bytes(_name).length < 9);
+        // require(
+        //     balances[msg.sender] >= _amount //, "Gas:insufficient sender Balance"
+        // );
+        // require(
+        //     bytes(_name).length < 9 //, "Gas:recipient name too long"
+        // );
         balances[msg.sender] -= _amount;
         balances[_recipient] += _amount;
         emit Transfer(_recipient, _amount);
@@ -123,17 +132,17 @@ contract GasContract is Ownable {
         PaymentType _type
     ) public onlyAdminOrOwner {
         require(
-            _ID > 0,
-            "Gas Contract - Update Payment function - ID must be greater than 0"
+            _ID > 0 && _amount > 0 && _user != address(0) //,"Gas:Invalid input"
         );
-        require(
-            _amount > 0,
-            "Gas Contract - Update Payment function - Amount must be greater than 0"
-        );
-        require(
-            _user != address(0),
-            "Gas Contract - Update Payment function - Administrator must have a valid non zero address"
-        );
+        // require(
+        //     _ID > 0 //, "Gas Contract - Update Payment function - ID must be greater than 0"
+        // );
+        // require(
+        //     _amount > 0 //, "Gas Contract - Update Payment function - Amount must be greater than 0"
+        // );
+        // require(
+        //     _user != address(0) // , "Gas Contract - Update Payment function - Administrator must have a valid non zero address"
+        // );
 
         for (uint256 ii = 0; ii < payments[_user].length; ii++) {
             if (payments[_user][ii].paymentID == _ID) {
@@ -150,8 +159,7 @@ contract GasContract is Ownable {
         onlyAdminOrOwner
     {
         require(
-            _tier < 255,
-            "Gas Contract - addToWhitelist function -  tier level should not be greater than 255"
+            _tier < 255 //, "Gas.addToWhitelist-tier lvl over 255"
         );
         whitelist[_userAddrs] = _tier;
         if (_tier > 3) {
@@ -171,14 +179,13 @@ contract GasContract is Ownable {
         uint256 _amount,
         ImportantStruct memory _struct
     ) public checkIfWhiteListed(msg.sender) {
-        require(
-            balances[msg.sender] >= _amount,
-            "Gas Contract - whiteTransfers function - Sender has insufficient Balance"
-        );
-        require(
-            _amount > 3,
-            "Gas Contract - whiteTransfers function - amount to send have to be bigger than 3"
-        );
+        require(balances[msg.sender] >= _amount && _amount > 3);
+        // require(
+        //     balances[msg.sender] >= _amount //, "Gas.whiteTransfers:Insufficient Sender Balance"
+        // );
+        // require(
+        //     _amount > 3 //, "Gas.whiteTransfers:Amount not greater than 3"
+        // );
         balances[msg.sender] -= _amount;
         balances[_recipient] += _amount;
         balances[msg.sender] += whitelist[msg.sender];
