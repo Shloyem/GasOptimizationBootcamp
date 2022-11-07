@@ -35,52 +35,27 @@ contract GasContract is Ownable {
         uint8 valueB; // max 3 digits
     }
 
-    event AddedToWhitelist(address userAddress, uint256 tier);
-
     modifier onlyAdminOrOwner() {
-        address senderOfTx = msg.sender;
-        if (checkForAdmin(senderOfTx)) {
-            require(
-                checkForAdmin(senderOfTx),
-                "Gas Contract Only Admin Check-  Caller not admin"
-            );
-            _;
-        } else if (senderOfTx == owner()) {
+        if ((msg.sender == owner()) || checkForAdmin(msg.sender)) {
+            // todo look for better owner check
             _;
         } else {
-            revert(
-                "Error in Gas contract - onlyAdminOrOwner modifier : revert happened because the originator of the transaction was not the admin, and furthermore he wasn't the owner of the contract, so he cannot run this function"
-            );
+            revert("Gas:onlyAdminOrOwner");
         }
     }
 
     modifier checkIfWhiteListed(address sender) {
-        address senderOfTx = msg.sender;
         require(
-            senderOfTx == sender,
+            msg.sender == sender,
             "Gas Contract CheckIfWhiteListed modifier : revert happened because the originator of the transaction was not the sender"
         );
-        uint256 usersTier = whitelist[senderOfTx];
-        require(
-            usersTier > 0,
-            "Gas Contract CheckIfWhiteListed modifier : revert happened because the user is not whitelisted"
-        );
-        require(
-            usersTier < 4,
-            "Gas Contract CheckIfWhiteListed modifier : revert happened because the user's tier is incorrect, it cannot be over 4 as the only tier we have are: 1, 2, 3; therfore 4 is an invalid tier for the whitlist of this contract. make sure whitlist tiers were set correctly"
-        );
+        uint256 usersTier = whitelist[msg.sender];
+        require(usersTier > 0, "Gas:user is not whitelisted");
+        require(usersTier < 4, "Gas:incorrect tier is incorrect");
         _;
     }
 
-    event supplyChanged(address indexed, uint256 indexed);
     event Transfer(address recipient, uint256 amount);
-    event PaymentUpdated(
-        address admin,
-        uint256 ID,
-        uint256 amount,
-        string recipient
-    );
-    event WhiteListTransfer(address indexed);
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
         totalSupply = _totalSupply;
@@ -92,11 +67,6 @@ contract GasContract is Ownable {
                     balances[owner()] = _totalSupply;
                 } else {
                     balances[_admins[ii]] = 0;
-                }
-                if (_admins[ii] == owner()) {
-                    emit supplyChanged(_admins[ii], _totalSupply);
-                } else if (_admins[ii] != owner()) {
-                    emit supplyChanged(_admins[ii], 0);
                 }
             }
         }
@@ -135,7 +105,7 @@ contract GasContract is Ownable {
 
     function transfer(
         address _recipient,
-        uint256 _amount,
+        uint256 _amount, // todo: maybe change amount to uint16 according to tests input
         string calldata _name
     ) public returns (bool status_) {
         address senderOfTx = msg.sender;
@@ -194,12 +164,6 @@ contract GasContract is Ownable {
                 payments[_user][ii].paymentType = _type;
                 payments[_user][ii].amount = _amount;
                 bool tradingMode = getTradingMode();
-                emit PaymentUpdated(
-                    senderOfTx,
-                    _ID,
-                    _amount,
-                    payments[_user][ii].recipientName
-                );
             }
         }
     }
@@ -223,8 +187,6 @@ contract GasContract is Ownable {
             whitelist[_userAddrs] -= _tier;
             whitelist[_userAddrs] = 2;
         }
-
-        emit AddedToWhitelist(_userAddrs, _tier);
     }
 
     function whiteTransfer(
@@ -245,7 +207,5 @@ contract GasContract is Ownable {
         balances[_recipient] += _amount;
         balances[senderOfTx] += whitelist[senderOfTx];
         balances[_recipient] -= whitelist[senderOfTx];
-
-        emit WhiteListTransfer(_recipient);
     }
 }
