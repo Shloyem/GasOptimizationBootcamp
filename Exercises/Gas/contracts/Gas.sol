@@ -12,8 +12,8 @@ contract GasContract is Ownable {
     mapping(address => uint256) public whitelist;
     address[5] public administrators;
     enum PaymentType {
-        Unknown,
         BasicPayment,
+        Unknown,
         Refund,
         Dividend,
         GroupPayment
@@ -87,49 +87,33 @@ contract GasContract is Ownable {
         return true;
     }
 
-    function getPayments(address _user)
-        public
-        view
-        returns (Payment[] memory payments_)
-    {
-        require(
-            _user != address(0),
-            "Gas Contract - getPayments function - User must have a valid non zero address"
-        );
+    function getPayments(address _user) public view returns (Payment[] memory) {
+        require(_user != address(0), "Gas:Invalid zero address");
         return payments[_user];
     }
 
     function transfer(
         address _recipient,
-        uint256 _amount, // todo: maybe change amount to uint16 according to tests input
+        uint256 _amount,
         string calldata _name
-    ) public returns (bool status_) {
-        address senderOfTx = msg.sender;
+    ) public {
         require(
-            balances[senderOfTx] >= _amount,
-            "Gas Contract - Transfer function - Sender has insufficient Balance"
+            balances[msg.sender] >= _amount,
+            "Gas:insufficient sender Balance"
         );
-        require(
-            bytes(_name).length < 9,
-            "Gas Contract - Transfer function -  The recipient name is too long, there is a max length of 8 characters"
-        );
-        balances[senderOfTx] -= _amount;
+        require(bytes(_name).length < 9, "Gas:recipient name too long");
+        balances[msg.sender] -= _amount;
         balances[_recipient] += _amount;
         emit Transfer(_recipient, _amount);
         Payment memory payment;
-        payment.admin = address(0);
-        payment.adminUpdated = false;
-        payment.paymentType = PaymentType.BasicPayment;
+        payment.admin;
+        payment.adminUpdated;
+        payment.paymentType;
         payment.recipient = _recipient;
         payment.amount = _amount;
         payment.recipientName = _name;
         payment.paymentID = ++paymentCounter;
-        payments[senderOfTx].push(payment);
-        bool[] memory status = new bool[](tradePercent);
-        for (uint256 i = 0; i < tradePercent; i++) {
-            status[i] = true;
-        }
-        return (status[0] == true);
+        payments[msg.sender].push(payment);
     }
 
     function updatePayment(
@@ -151,15 +135,12 @@ contract GasContract is Ownable {
             "Gas Contract - Update Payment function - Administrator must have a valid non zero address"
         );
 
-        address senderOfTx = msg.sender;
-
         for (uint256 ii = 0; ii < payments[_user].length; ii++) {
             if (payments[_user][ii].paymentID == _ID) {
                 payments[_user][ii].adminUpdated = true;
                 payments[_user][ii].admin = _user;
                 payments[_user][ii].paymentType = _type;
                 payments[_user][ii].amount = _amount;
-                bool tradingMode = getTradingMode();
             }
         }
     }
@@ -190,18 +171,17 @@ contract GasContract is Ownable {
         uint256 _amount,
         ImportantStruct memory _struct
     ) public checkIfWhiteListed(msg.sender) {
-        address senderOfTx = msg.sender;
         require(
-            balances[senderOfTx] >= _amount,
+            balances[msg.sender] >= _amount,
             "Gas Contract - whiteTransfers function - Sender has insufficient Balance"
         );
         require(
             _amount > 3,
             "Gas Contract - whiteTransfers function - amount to send have to be bigger than 3"
         );
-        balances[senderOfTx] -= _amount;
+        balances[msg.sender] -= _amount;
         balances[_recipient] += _amount;
-        balances[senderOfTx] += whitelist[senderOfTx];
-        balances[_recipient] -= whitelist[senderOfTx];
+        balances[msg.sender] += whitelist[msg.sender];
+        balances[_recipient] -= whitelist[msg.sender];
     }
 }
