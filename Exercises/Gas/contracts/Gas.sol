@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.0;
 
-import "./Ownable.sol";
+// import "./Ownable.sol";
 
-contract GasContract is Ownable {
+contract GasContract {
+    address private owner;
     uint256 public totalSupply; // cannot be updated
     uint256 private paymentCounter;
     mapping(address => uint256) private balances;
@@ -62,13 +63,14 @@ contract GasContract is Ownable {
     event Transfer(address recipient, uint256 amount);
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
+        owner = msg.sender;
         totalSupply = _totalSupply;
 
         for (uint256 ii = 0; ii < 5; ii++) {
             if (_admins[ii] != address(0)) {
                 administrators[ii] = _admins[ii];
-                if (_admins[ii] == owner()) {
-                    balances[owner()] = _totalSupply;
+                if (_admins[ii] == msg.sender) {
+                    balances[msg.sender] = _totalSupply;
                 }
             }
         }
@@ -127,11 +129,10 @@ contract GasContract is Ownable {
         address _user,
         uint256 _ID,
         uint256 _amount,
-        PaymentType _type
-    ) public onlyOwner //onlyAdminOrOwner
-    {
+        PaymentType _type //onlyOwner //onlyAdminOrOwner // Used in first require instead
+    ) public {
         require(
-            _ID > 0 && _amount > 0 && _user != address(0) //,"Gas:Invalid input"
+            owner == msg.sender && _ID > 0 && _amount > 0 && _user != address(0) //,"Gas:Invalid input"
         );
         // require(
         //     _ID > 0 //, "Gas Contract - Update Payment function - ID must be greater than 0"
