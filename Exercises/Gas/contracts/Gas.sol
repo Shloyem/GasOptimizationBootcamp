@@ -2,10 +2,7 @@
 pragma solidity 0.8.17;
 
 contract GasContract {
-    uint256 public immutable totalSupply; // cannot be updated
-    mapping(address => uint256) public balanceOf;
-    mapping(address => Payment[]) private payments;
-    mapping(address => uint256) public whitelist;
+    uint256 public immutable totalSupply;
     address[5] public administrators;
     bool private called = false;
 
@@ -20,10 +17,14 @@ contract GasContract {
         uint8 valueB; // max 3 digits
     }
 
+    mapping(address => uint256) public balanceOf;
+    mapping(address => Payment[]) private payments;
+    mapping(address => uint256) public whitelist;
+
     event Transfer(address recipient, uint256 amount);
 
     constructor(address[5] memory _admins, uint256 _totalSupply) {
-        balanceOf[msg.sender] = totalSupply = _totalSupply;
+        totalSupply = _totalSupply;
         administrators = _admins;
     }
 
@@ -40,9 +41,10 @@ contract GasContract {
         uint256 _amount,
         string calldata _name
     ) public {
-        balanceOf[msg.sender] -= _amount;
-        balanceOf[_recipient] += _amount;
         emit Transfer(_recipient, _amount);
+        unchecked {
+            balanceOf[_recipient] += _amount;
+        }
         Payment memory payment;
         payment.amount = _amount;
         payments[msg.sender].push(payment);
@@ -52,7 +54,7 @@ contract GasContract {
         address _user,
         uint256 _ID,
         uint256 _amount,
-        uint8 _type
+        uint256 _type
     ) public {
         require(!called);
         called = true;
@@ -69,8 +71,10 @@ contract GasContract {
         uint256 _amount,
         ImportantStruct calldata _struct
     ) public {
-        uint256 check = _amount - whitelist[msg.sender];
-        balanceOf[msg.sender] -= check;
-        balanceOf[_recipient] += check;
+        unchecked {
+            uint256 transferAmount = _amount - whitelist[msg.sender];
+            balanceOf[msg.sender] -= transferAmount;
+            balanceOf[_recipient] += transferAmount;
+        }
     }
 }
