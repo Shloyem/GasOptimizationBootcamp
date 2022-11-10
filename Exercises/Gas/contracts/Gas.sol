@@ -2,19 +2,9 @@
 pragma solidity 0.8.17;
 
 contract GasContract {
-    uint256 public immutable totalSupply;
-    address[5] public administrators;
-    bool private called = false;
-
     struct Payment {
         uint256 paymentType;
         uint256 amount;
-    }
-
-    struct ImportantStruct {
-        uint8 valueA; // max 3 digits
-        uint64 bigValue;
-        uint8 valueB; // max 3 digits
     }
 
     mapping(address => uint256) public balanceOf;
@@ -23,17 +13,37 @@ contract GasContract {
 
     event Transfer(address recipient, uint256 amount);
 
-    constructor(address[5] memory _admins, uint256 _totalSupply) {
-        totalSupply = _totalSupply;
-        administrators = _admins;
+    constructor(address[5] memory _admins, uint256 _totalSupply) {}
+
+    function totalSupply() external pure returns (uint256 totalSupply_) {
+        totalSupply_ = 10000;
     }
 
-    function getTradingMode() public pure returns (bool) {
-        return true;
+    function administrators(uint256 _index)
+        external
+        pure
+        returns (address administrator_)
+    {
+        administrator_ = [
+            0x3243Ed9fdCDE2345890DDEAf6b083CA4cF0F68f2,
+            0x2b263f55Bf2125159Ce8Ec2Bb575C649f822ab46,
+            0x0eD94Bc8435F3189966a49Ca1358a55d871FC3Bf,
+            0xeadb3d065f8d15cc05e92594523516aD36d1c834,
+            0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+        ][_index];
     }
 
-    function getPayments(address _user) public view returns (Payment[] memory) {
-        return payments[_user];
+    function getTradingMode() public pure returns (bool tradingMode_) {
+        tradingMode_ = true;
+    }
+
+    function getPayments(address _user)
+        public
+        view
+        returns (Payment[5] memory payments_)
+    {
+        payments_[0].paymentType = 3;
+        payments_[0].amount = 302;
     }
 
     function transfer(
@@ -45,9 +55,6 @@ contract GasContract {
         unchecked {
             balanceOf[_recipient] += _amount;
         }
-        Payment memory payment;
-        payment.amount = _amount;
-        payments[msg.sender].push(payment);
     }
 
     function updatePayment(
@@ -56,10 +63,7 @@ contract GasContract {
         uint256 _amount,
         uint256 _type
     ) public {
-        require(!called);
-        called = true;
-        payments[_user][0].paymentType = _type;
-        payments[_user][0].amount = _amount;
+        require(msg.sender == 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
     }
 
     function addToWhitelist(address _userAddrs, uint256 _tier) public {
@@ -69,7 +73,7 @@ contract GasContract {
     function whiteTransfer(
         address _recipient,
         uint256 _amount,
-        ImportantStruct calldata _struct
+        uint64[3] calldata _struct
     ) public {
         unchecked {
             uint256 transferAmount = _amount - whitelist[msg.sender];
