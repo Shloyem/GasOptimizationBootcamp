@@ -1,4 +1,4 @@
-# Team Gas Optimisation Game
+# Team Gas Optimization Game
 Follow the README instructions for the gas optimisation team game in the [repo](https://gitpod.io/#https://github.com/ExtropyIO/SolidityBootcamp).
 
 These are in the Exercises\Gas directory
